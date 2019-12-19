@@ -1,0 +1,125 @@
+#!/usr/bin/env ruby
+require 'yaml'
+
+$LOAD_PATH.unshift(File.expand_path('../../lib', __FILE__))
+require 'gitlab_development_kit'
+
+# Gitlab Development Kit CLI launcher
+#
+# Note to contributors: this script must not change (much) because it is
+# installed outside the gitlab-development-kit repository with 'gem
+# install'. Edit lib/gdk.rb to define new commands.
+
+module GDK
+  DOTFILE = File.expand_path('~/.gdk.yml')
+  TRUSTED_KEY = 'trusted_directories'.freeze
+  ROOT_CHECK_FILE = '.gdk-install-root'.freeze
+  DEFAULT_INIT_DIRECTORY = File.join(Dir.pwd, 'gitlab-development-kit')
+
+  def self.launcher_main
+    case ARGV.first
+    when 'version'
+      puts "GitLab Development Kit gem version #{GDK::GEM_VERSION}"
+      true
+    when 'init'
+      if ARGV.count > 2 || (ARGV.count == 2 && (ARGV[1] == "-help" || ARGV[1] == "--help"))
+        puts "Usage: gdk init [DIR]"
+        return false
+      end
+      directory = ARGV.count == 2 ? ARGV[1] : DEFAULT_INIT_DIRECTORY
+      if directory.start_with?('-')
+  puts <<-EOS.gsub(/^\s+\|/, '')
+    |The gdk directory cannot start with a dash ('-').  Did you mean:
+    |gdk init #{directory.sub(/^-+/,'')}
+  EOS
+  return false
+      end
+      cmd = %W[git clone https://gitlab.com/gitlab-org/gitlab-development-kit.git #{directory}]
+      system(*cmd) && trust!(directory) && remember!(directory)
+    when 'trust'
+      if ARGV.count != 2
+        puts "Usage: gdk trust DIR"
+        return false
+      end
+      trust!(ARGV[1])
+    else
+      $gdk_root = find_root(Dir.pwd)
+      if $gdk_root.nil?
+        puts <<-EOS.gsub(/^\s+\|/, '')
+          |
+          |The current working directory is not inside a gitlab-development-kit
+          |installation. Use 'cd' to go to your gitlab-development-kit or create
+          |a new one with 'gdk init'.
+          |
+          |gdk init [DIRECTORY] # Default: #{DEFAULT_INIT_DIRECTORY}
+          |
+        EOS
+        return false
+      end
+      warn "(in #{$gdk_root})"
+
+      unless trusted?($gdk_root)
+        puts <<-EOS.gsub(/^\s+\|/, '')
+          |
+          |This GitLab Development Kit root directory is not known to the "gdk"
+          |command. To mark it as trusted run:
+          |
+          |gdk trust #{$gdk_root}
+          |
+        EOS
+        return false
+      end
+
+      load(File.join($gdk_root, 'lib/gdk.rb'))
+      GDK.main
+    end
+  end
+
+  def self.find_root(current)
+    if File.exist?(File.join(current, 'GDK_ROOT'))
+      File.realpath(current)
+    elsif File.realpath(current) == '/'
+      nil
+    else
+      find_root(File.join(current, '..'))
+    end
+  end
+
+  def self.trusted?(directory)
+    trusted_directories = load_dotfile[TRUSTED_KEY] || []
+    !!trusted_directories.include?(File.realpath(directory))
+  end
+
+  def self.trust!(directory)
+    directory = File.realpath(directory)
+    config = load_dotfile
+    config[TRUSTED_KEY] ||= []
+
+    if config[TRUSTED_KEY].include?(directory)
+      puts "#{directory} is already in #{TRUSTED_KEY} in #{DOTFILE}"
+    else
+      config[TRUSTED_KEY] << directory
+      config[TRUSTED_KEY].uniq!
+      puts "Adding #{directory} to #{TRUSTED_KEY} in #{DOTFILE}"
+      File.open(DOTFILE, 'w') { |f| YAML.dump(config, f) }
+    end
+
+    true
+  end
+
+  def self.load_dotfile
+    File.open(DOTFILE, File::RDONLY | File::CREAT) { |f| YAML.safe_load(f) } || {}
+  end
+
+  def self.remember!(directory)
+    open("#{directory}/#{ROOT_CHECK_FILE}", 'w') do |f|
+      f.puts File.realpath(directory)
+    end
+    true
+  rescue => ex
+    warn ex
+    false
+  end
+end
+
+exit(GDK.launcher_main)

@@ -1,0 +1,61 @@
+#!/usr/bin/env ruby
+require 'socket'
+require 'fileutils'
+
+require_relative '../lib/gdk/config'
+
+LOG_FILE = 'bootstrap-rails.log'.freeze
+
+def main
+  success = true
+
+  begin
+    FileUtils.rm_f(LOG_FILE)
+
+    system('gdk', 'start', 'rails-migration-dependencies')
+
+    try_connect!(config.praefect? ? 'praefect' : 'gitaly')
+    [
+      %w[support/wait-postgresql-ready support/exec-cd gitlab bundle exec rake db:create],
+      %w[support/exec-cd gitlab bundle exec rake dev:setup]
+    ].each do |cmd|
+      success &&= system({ 'force' => 'yes', 'BOOTSTRAP' => '1' }, *cmd)
+    end
+  end
+
+  exit true if success
+
+  abort "#{$PROGRAM_NAME} failed"
+end
+
+def config
+  @config ||= GDK::Config.new
+end
+
+def try_connect!(service)
+  print "Waiting for #{service} to boot"
+
+  sleep_time = 0.1
+  repeats = 100
+
+  repeats.times do
+    sleep sleep_time
+    print '.'
+
+    begin
+      UNIXSocket.new("#{service}.socket").close
+      puts ' OK'
+
+      return
+    rescue Errno::ENOENT, Errno::ECONNREFUSED
+    end
+  end
+
+  puts " failed to connect to #{service} after #{repeats * sleep_time}s"
+  puts
+  system('grep', "#{service}\.1", LOG_FILE)
+
+  abort
+end
+
+main

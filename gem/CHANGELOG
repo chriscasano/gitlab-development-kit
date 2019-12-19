@@ -1,0 +1,22 @@
+v0.2.5
+- Add experimental support for Puma in GitLab Rails
+- Warn user if they are not using the proper Ruby version during GDK installation
+- Add 'gdk env' subcommand
+- Add support for gitlab-pages
+- Add support for running Rails 5
+
+v0.2.4
+- Better hints when run outside of GDK root.
+
+v0.2.3
+- Remember installation directory during 'gdk init'
+
+v0.2.2
+- Add 'gdk version' command
+
+v0.2.1
+- Automatically trust directory after 'gdk init'
+
+v0.2.0
+- Fix clone command (use default branch)
+- Add trusted_directories dotfile setting

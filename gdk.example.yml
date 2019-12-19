@@ -1,0 +1,137 @@
+---
+auto_devops:
+  enabled: false
+  gitlab:
+    port: 20000
+  registry:
+    port: 25000
+elasticsearch:
+  enabled: false
+  checksum: 5903e1913a7c96aad96a8227517c40490825f672
+  version: 6.5.1
+gdk:
+  ignore_foreman: false
+  overwrite_changes: false
+gdk_root: !ruby/object:Pathname
+  path: "/home/git/gdk"
+geo:
+  enabled: false
+  node_name: "My local Geo node name"
+git:
+  bin: "/usr/bin/git"
+git_repositories:
+- "/home/git/gdk/."
+gitaly:
+  address: !ruby/object:Pathname
+    path: "/home/git/gdk/gitaly.socket"
+  assembly_dir: !ruby/object:Pathname
+    path: "/home/git/gdk/gitaly/assembly"
+  log_dir: !ruby/object:Pathname
+    path: "/home/git/gdk/log/gitaly"
+  auto_update: true
+gitlab_pages:
+  enabled: true
+  port: 3010
+  auto_update: true
+hostname: localhost
+https:
+  enabled: false
+nginx:
+  bin: "/usr/sbin/nginx"
+  enabled: false
+  http:
+    enabled: false
+    port: 80
+  listen: localhost
+  ssl:
+    certificate: localhost.crt
+object_store:
+  enabled: false
+  port: 9000
+omniauth:
+  google_oauth2:
+    client_id:
+    client_secret:
+    enabled: false
+port: 3000
+postgresql:
+  bin_dir: "/usr/bin"
+  data_dir: !ruby/object:Pathname
+    path: "/home/git/gdk/postgresql/data"
+  dir: !ruby/object:Pathname
+    path: "/home/git/gdk/postgresql"
+  geo:
+    dir: !ruby/object:Pathname
+      path: "/home/git/gdk/postgresql-geo"
+    port: 5432
+  port: 5432
+  replica_dir: !ruby/object:Pathname
+    path: "/home/git/gdk/postgresql-replica"
+  replication_user: gitlab_replication
+praefect:
+  address: !ruby/object:Pathname
+    path: "/home/git/gdk/praefect.socket"
+  config_file: !ruby/object:Pathname
+    path: "/home/git/gdk/gitaly/praefect.config.toml"
+  enabled: true
+  node_count: 1
+  nodes:
+  - address: !ruby/object:Pathname
+      path: "/home/git/gdk/gitaly-praefect-0.socket"
+    config_file: gitaly/gitaly-0.praefect.toml
+    log_dir: !ruby/object:Pathname
+      path: "/home/git/gdk/log/praefect-gitaly-0"
+    primary: true
+    storage: praefect-internal-0
+    storage_dir: "/home/git/gdk/repositories/praefect-internal-0"
+  - address: !ruby/object:Pathname
+      path: "/home/git/gdk/gitaly-praefect-1.socket"
+    config_file: gitaly/gitaly-1.praefect.toml
+    log_dir: !ruby/object:Pathname
+      path: "/home/git/gdk/log/praefect-gitaly-1"
+    primary: false
+    storage: praefect-internal-1
+    storage_dir: "/home/git/gdk/repositories/praefect-internal-1"
+  - address: !ruby/object:Pathname
+      path: "/home/git/gdk/gitaly-praefect-2.socket"
+    config_file: gitaly/gitaly-2.praefect.toml
+    log_dir: !ruby/object:Pathname
+      path: "/home/git/gdk/log/praefect-gitaly-2"
+    primary: false
+    storage: praefect-internal-2
+    storage_dir: "/home/git/gdk/repositories/praefect-internal-2"
+registry:
+  enabled: false
+  external_port: 5000
+  host: localhost
+  port: 5000
+relative_url_root: "/"
+repositories:
+  gitaly: https://gitlab.com/gitlab-org/gitaly.git
+  gitlab: https://gitlab.com/gitlab-org/gitlab.git
+  gitlab_docs: https://gitlab.com/gitlab-com/gitlab-docs.git
+  gitlab_elasticsearch_indexer: https://gitlab.com/gitlab-org/gitlab-elasticsearch-indexer.git
+  gitlab_pages: https://gitlab.com/gitlab-org/gitlab-pages.git
+  gitlab_shell: https://gitlab.com/gitlab-org/gitlab-shell.git
+  gitlab_workhorse: https://gitlab.com/gitlab-org/gitlab-workhorse.git
+repositories_root: !ruby/object:Pathname
+  path: "/home/git/gdk/repositories"
+sshd:
+  enabled: false
+  bin: "/usr/sbin/sshd"
+tracer:
+  build_tags: tracer_static tracer_static_jaeger
+  jaeger:
+    enabled: true
+    version: 1.10.1
+username: git
+webpack:
+  host: localhost
+  port: 3808
+workhorse:
+  configured_port: 3333
+  auto_update: true
+gitlab_elasticsearch_indexer:
+  auto_update: true
+gitlab_shell:
+  auto_update: true

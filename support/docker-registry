@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+registry_enabled=$(gdk config get registry.enabled 2>/dev/null)
+registry_port=$(gdk config get registry.port 2>/dev/null)
+registry_image=$(gdk config get registry.image 2>/dev/null)
+
+if [[ "${registry_enabled}" == "true" ]]; then
+  if [[ "$OSTYPE" == "linux-gnu" ]]; then
+    run_opts="--net host"
+  fi
+
+  exec docker run --rm -p ${registry_port:-5000}:5000 ${run_opts} \
+      -v $(pwd)/registry/config.yml:/etc/docker/registry/config.yml \
+      -v $(pwd)/registry/storage:/var/lib/registry \
+      -v $(pwd)/localhost.crt:/root/certs/certbundle \
+      "${registry_image:-registry:2}"
+else
+  echo "Docker registry disabled."
+  # Keep active so the process supervisor (i.e. runit) thinks everything is okay
+  exec tail -f /dev/null
+fi

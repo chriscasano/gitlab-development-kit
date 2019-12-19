@@ -1,0 +1,6 @@
+#!/usr/bin/env ruby
+
+system(*%w[gdk start postgresql])
+
+createdb_status = system(*%W[support/wait-postgresql-ready createdb -h #{Dir.pwd}/postgresql grafana])
+exit createdb_status
